@@ -462,8 +462,25 @@ function useIframeFallback() {
 }
 vid.addEventListener('error', useIframeFallback, true);
 vid.querySelectorAll('source').forEach(s => s.addEventListener('error', useIframeFallback));
-// safety net: if nothing playable after 6s, use fallback
-setTimeout(() => { if (vid.readyState < 2) useIframeFallback(); }, 6000);
+vid.addEventListener('stalled', () => { if (vid.readyState === 0) useIframeFallback(); });
+// safety net: if nothing playable after 3.5s, use iframe embed (works on mobile when shared publicly)
+setTimeout(() => { if (vid.readyState < 2) useIframeFallback(); }, 3500);
+// if iframe ALSO fails (file not shared publicly), show a clear notice instead of a blank hero
+setTimeout(() => {
+  const f = document.getElementById('heroIframe');
+  if (f) {
+    f.addEventListener('error', showVideoNotice);
+  }
+}, 4000);
+function showVideoNotice() {
+  const wrap = document.getElementById('videoWrap');
+  if (wrap.querySelector('.vid-notice')) return;
+  const n = document.createElement('div');
+  n.className = 'vid-notice';
+  n.style.cssText = 'position:absolute;inset:0;display:grid;place-items:center;color:#e2c07a;font-size:.95rem;letter-spacing:.05em;text-align:center;padding:20px;z-index:1;';
+  n.textContent = 'Video unavailable — set the Drive file to "Anyone with the link can view" and redeploy.';
+  wrap.appendChild(n);
+}
 </script>
 </body>
 </html>
